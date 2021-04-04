@@ -33,18 +33,39 @@ var Card = (function (_super) {
         _this.scene = scene;
         _this.value = value;
         _this.opened = false;
-        _this.setOrigin(0, 0);
         _this.scene.add.existing(_this);
         _this.setInteractive();
         return _this;
     }
+    Card.prototype.flipCard = function (texture) {
+        var _this = this;
+        if (texture === void 0) { texture = "card"; }
+        this.scene.tweens.add({
+            targets: this,
+            scaleX: 0,
+            ease: "Linear",
+            duration: 200,
+            onComplete: function () {
+                _this.showCard(_this, texture);
+            }
+        });
+    };
+    Card.prototype.showCard = function (context, texture) {
+        context.setTexture(texture);
+        context.scene.tweens.add({
+            targets: context,
+            scaleX: 1,
+            ease: "Linear",
+            duration: 200
+        });
+    };
     Card.prototype.open = function () {
         this.opened = true;
-        this.setTexture("card" + this.value);
+        this.flipCard("card" + this.value);
     };
     Card.prototype.close = function () {
         this.opened = false;
-        this.setTexture("card");
+        this.flipCard();
     };
     return Card;
 }(Phaser.GameObjects.Sprite));
@@ -162,8 +183,8 @@ var GameScene = (function (_super) {
         for (var row = 0; row < 2; row++) {
             for (var col = 0; col < 5; col++) {
                 cardsPosition.push({
-                    x: utils_1.Offset.OFFSET_X + col * cardWidth,
-                    y: utils_1.Offset.OFFSET_Y + row * cardHeight,
+                    x: utils_1.Offset.OFFSET_X + col * cardWidth + cardWidth / 2,
+                    y: utils_1.Offset.OFFSET_Y + row * cardHeight + cardHeight / 2,
                 });
             }
         }

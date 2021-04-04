@@ -99,8 +99,8 @@ export class GameScene extends Phaser.Scene {
         for (let row = 0; row < 2; row++) {
             for (let col = 0; col < 5; col++) {
                 cardsPosition.push({
-                    x: Offset.OFFSET_X + col * cardWidth,
-                    y: Offset.OFFSET_Y + row * cardHeight,
+                    x: Offset.OFFSET_X + col * cardWidth + cardWidth / 2,
+                    y: Offset.OFFSET_Y + row * cardHeight + cardHeight / 2,
                 });
             }
         }
