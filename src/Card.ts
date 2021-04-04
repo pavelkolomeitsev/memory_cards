@@ -28,6 +28,7 @@ export class Card extends Phaser.GameObjects.Sprite {
     }
 
     private showCard(context: Card, texture: string) {
+        // change one texture of the sprite into another one
         context.setTexture(texture); // result - "card0", "card1" ...
         context.scene.tweens.add({
             targets: context,
@@ -38,7 +39,6 @@ export class Card extends Phaser.GameObjects.Sprite {
     }
 
     public open() {
-        // change one texture of the sprite into another one
         this.opened = true;
         this.flipCard("card" + this.value);
     }
