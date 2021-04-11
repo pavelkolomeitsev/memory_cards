@@ -106,9 +106,10 @@ var GameScene = (function (_super) {
         var _this = _super.call(this, { key: "game-scene" }) || this;
         _this.cards = [];
         _this.positionArray = [];
+        _this.sounds = null;
         _this.openCard = null;
         _this.cardPairsCount = 0;
-        _this.textTimeout = "Time: ";
+        _this.timeout = 0;
         return _this;
     }
     GameScene.prototype.preload = function () {
@@ -119,14 +120,34 @@ var GameScene = (function (_super) {
         this.load.image("card2", "assets/card3.png");
         this.load.image("card3", "assets/card4.png");
         this.load.image("card4", "assets/card5.png");
+        this.load.audio("theme", "assets/sounds/theme.mp3");
+        this.load.audio("card", "assets/sounds/card.mp3");
+        this.load.audio("complete", "assets/sounds/complete.mp3");
+        this.load.audio("success", "assets/sounds/success.mp3");
+        this.load.audio("timeout", "assets/sounds/timeout.mp3");
     };
     GameScene.prototype.create = function () {
-        this.createTimer();
+        this.timeout = utils_1.startTime;
+        this.createSounds();
         this.createBackground();
         this.createCards();
+        this.createTimer();
         this.createText();
     };
+    GameScene.prototype.createSounds = function () {
+        this.sounds = {
+            theme: this.sound.add("theme"),
+            card: this.sound.add("card"),
+            complete: this.sound.add("complete"),
+            success: this.sound.add("success"),
+            timeout: this.sound.add("timeout")
+        };
+        this.sounds.theme.play({ volume: 0.15 });
+    };
     GameScene.prototype.restartGame = function () {
+        var _a;
+        (_a = this.sounds) === null || _a === void 0 ? void 0 : _a.theme.play({ volume: 0.15 });
+        this.timeout = utils_1.startTime;
         this.openCard = null;
         this.cardPairsCount = 0;
         Phaser.Utils.Array.Shuffle(this.positionArray);
@@ -135,11 +156,24 @@ var GameScene = (function (_super) {
             this.cards[i].setPosition(this.positionArray[i].x, this.positionArray[i].y);
         }
     };
+    GameScene.prototype.onTimerTick = function () {
+        var _a, _b;
+        (_a = this.timeText) === null || _a === void 0 ? void 0 : _a.setText("Time: " + this.timeout--);
+        if (this.timeout < 0) {
+            (_b = this.sounds) === null || _b === void 0 ? void 0 : _b.timeout.play({ volume: 1.5 });
+            this.restartGame();
+        }
+    };
     GameScene.prototype.createTimer = function () {
-        this.time.addEvent({ delay: 1000, callback: function () { } });
+        this.time.addEvent({
+            delay: 1000,
+            callback: this.onTimerTick,
+            loop: true,
+            callbackScope: this
+        });
     };
     GameScene.prototype.createText = function () {
-        this.add.text(10, 336, this.textTimeout, { font: "36px CurseCasual", color: "#ffffff" });
+        this.timeText = this.add.text(10, 336, "", { font: "36px CurseCasual", color: "#ffffff" });
     };
     GameScene.prototype.createBackground = function () {
         this.add.sprite(0, 0, "bg").setOrigin(0, 0);
@@ -163,13 +197,16 @@ var GameScene = (function (_super) {
         });
     };
     GameScene.prototype.openCardClick = function (card) {
+        var _a, _b, _c;
         if (card.opened) {
             return;
         }
+        (_a = this.sounds) === null || _a === void 0 ? void 0 : _a.card.play({ volume: 0.7 });
         if (this.openCard) {
             if (this.openCard.value === card.value) {
                 this.openCard = null;
                 this.cardPairsCount++;
+                (_b = this.sounds) === null || _b === void 0 ? void 0 : _b.success.play({ volume: 1.5 });
             }
             else {
                 this.openCard.close();
@@ -181,6 +218,7 @@ var GameScene = (function (_super) {
         }
         card.open();
         if (this.cardPairsCount === this.cards.length / 2) {
+            (_c = this.sounds) === null || _c === void 0 ? void 0 : _c.complete.play({ volume: 1.5 });
             this.restartGame();
         }
     };
@@ -214,7 +252,7 @@ exports.GameScene = GameScene;
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Offset = exports.config = void 0;
+exports.startTime = exports.Offset = exports.config = void 0;
 var GameScene_1 = __webpack_require__(/*! ./GameScene */ "./src/GameScene.ts");
 exports.config = {
     type: Phaser.AUTO,
@@ -228,6 +266,7 @@ var Offset;
     Offset[Offset["OFFSET_Y"] = 50] = "OFFSET_Y";
 })(Offset = exports.Offset || (exports.Offset = {}));
 ;
+exports.startTime = 30;
 
 
 /***/ })

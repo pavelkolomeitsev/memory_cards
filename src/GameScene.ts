@@ -1,13 +1,15 @@
 import { Card } from "./Card";
-import { CardPosition, Offset } from "./utils";
+import { CardPosition, Sound, Offset, startTime } from "./utils";
 
 export class GameScene extends Phaser.Scene {
 
     private cards: Card[] = [];
     private positionArray: CardPosition[] = [];
+    private sounds: Sound = null;
     private openCard: Card | null = null;
     private cardPairsCount: number = 0;
-    private textTimeout: string = "Time: ";
+    private timeText: Phaser.GameObjects.Text | undefined;
+    private timeout: number = 0;
 
     constructor() {
         super({key: "game-scene"});
@@ -21,17 +23,38 @@ export class GameScene extends Phaser.Scene {
         this.load.image("card2", "assets/card3.png");
         this.load.image("card3", "assets/card4.png");
         this.load.image("card4", "assets/card5.png");
+
+        this.load.audio("theme", "assets/sounds/theme.mp3");
+        this.load.audio("card", "assets/sounds/card.mp3");
+        this.load.audio("complete", "assets/sounds/complete.mp3");
+        this.load.audio("success", "assets/sounds/success.mp3");
+        this.load.audio("timeout", "assets/sounds/timeout.mp3");
     }
 
     protected create(): void {
-        // order of elements MATTER!!!
-        this.createTimer();
+        this.timeout = startTime;
+        // order of elements MATTERS!!!
+        this.createSounds();
         this.createBackground();
         this.createCards();
+        this.createTimer();
         this.createText();
     }
 
+    private createSounds() {
+        this.sounds = {
+            theme: this.sound.add("theme"),
+            card: this.sound.add("card"),
+            complete: this.sound.add("complete"),
+            success: this.sound.add("success"),
+            timeout: this.sound.add("timeout")
+        };
+        this.sounds.theme.play({volume: 0.15});
+    }
+
     private restartGame() {
+        this.sounds?.theme.play({volume: 0.15});
+        this.timeout = startTime;
         this.openCard = null;
         this.cardPairsCount = 0;
         Phaser.Utils.Array.Shuffle(this.positionArray); // make a random array
@@ -42,12 +65,25 @@ export class GameScene extends Phaser.Scene {
         }
     }
 
+    private onTimerTick() {
+        this.timeText?.setText(`Time: ${this.timeout--}`);
+        if (this.timeout < 0) {
+            this.sounds?.timeout.play({volume: 1.5});
+            this.restartGame();
+        }
+    }
+
     private createTimer() {
-        this.time.addEvent({delay: 1000, callback: () => {}});
+        this.time.addEvent({
+            delay: 1000,
+            callback: this.onTimerTick,
+            loop: true,
+            callbackScope: this // to pass the correct context
+        });
     }
 
     private createText() {
-        this.add.text(10, 336, this.textTimeout, { font: "36px CurseCasual", color: "#ffffff" });
+        this.timeText = this.add.text(10, 336, "", { font: "36px CurseCasual", color: "#ffffff" });
     }
 
     private createBackground(): void {
@@ -81,10 +117,13 @@ export class GameScene extends Phaser.Scene {
             return;
         }
 
+        this.sounds?.card.play({volume: 0.7});
+
         if (this.openCard) { // remember the last opened card in prop this.openCard
             if (this.openCard.value === card.value) { // compare prop this.openCard and new card
                 this.openCard = null; // clean prop
                 this.cardPairsCount++;
+                this.sounds?.success.play({volume: 1.5});
             } else {
                 // textures are different
                 this.openCard.close(); //  -> close the previous card through prop-pointer this.openCard
@@ -98,6 +137,7 @@ export class GameScene extends Phaser.Scene {
 
         // check if all cards` pairs are opened
         if (this.cardPairsCount === this.cards.length / 2) {
+            this.sounds?.complete.play({volume: 1.5});
             this.restartGame();
         }
     }
