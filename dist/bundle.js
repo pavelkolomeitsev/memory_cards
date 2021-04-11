@@ -37,20 +37,20 @@ var Card = (function (_super) {
         _this.setInteractive();
         return _this;
     }
-    Card.prototype.flipCard = function (texture) {
+    Card.prototype.flipCard = function () {
         var _this = this;
-        if (texture === void 0) { texture = "card"; }
         this.scene.tweens.add({
             targets: this,
             scaleX: 0,
             ease: "Linear",
             duration: 200,
             onComplete: function () {
-                _this.showCard(_this, texture);
+                _this.showCard(_this);
             }
         });
     };
-    Card.prototype.showCard = function (context, texture) {
+    Card.prototype.showCard = function (context) {
+        var texture = this.opened ? "card" + this.value : "card";
         context.setTexture(texture);
         context.scene.tweens.add({
             targets: context,
@@ -61,7 +61,7 @@ var Card = (function (_super) {
     };
     Card.prototype.open = function () {
         this.opened = true;
-        this.flipCard("card" + this.value);
+        this.flipCard();
     };
     Card.prototype.close = function () {
         this.opened = false;
@@ -108,6 +108,7 @@ var GameScene = (function (_super) {
         _this.positionArray = [];
         _this.openCard = null;
         _this.cardPairsCount = 0;
+        _this.textTimeout = "Time: ";
         return _this;
     }
     GameScene.prototype.preload = function () {
@@ -120,8 +121,10 @@ var GameScene = (function (_super) {
         this.load.image("card4", "assets/card5.png");
     };
     GameScene.prototype.create = function () {
+        this.createTimer();
         this.createBackground();
         this.createCards();
+        this.createText();
     };
     GameScene.prototype.restartGame = function () {
         this.openCard = null;
@@ -131,6 +134,12 @@ var GameScene = (function (_super) {
             this.cards[i].close();
             this.cards[i].setPosition(this.positionArray[i].x, this.positionArray[i].y);
         }
+    };
+    GameScene.prototype.createTimer = function () {
+        this.time.addEvent({ delay: 1000, callback: function () { } });
+    };
+    GameScene.prototype.createText = function () {
+        this.add.text(10, 336, this.textTimeout, { font: "36px CurseCasual", color: "#ffffff" });
     };
     GameScene.prototype.createBackground = function () {
         this.add.sprite(0, 0, "bg").setOrigin(0, 0);

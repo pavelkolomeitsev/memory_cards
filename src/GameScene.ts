@@ -7,6 +7,7 @@ export class GameScene extends Phaser.Scene {
     private positionArray: CardPosition[] = [];
     private openCard: Card | null = null;
     private cardPairsCount: number = 0;
+    private textTimeout: string = "Time: ";
 
     constructor() {
         super({key: "game-scene"});
@@ -23,8 +24,11 @@ export class GameScene extends Phaser.Scene {
     }
 
     protected create(): void {
+        // order of elements MATTER!!!
+        this.createTimer();
         this.createBackground();
         this.createCards();
+        this.createText();
     }
 
     private restartGame() {
@@ -36,6 +40,14 @@ export class GameScene extends Phaser.Scene {
             // set new position for each card
             this.cards[i].setPosition(this.positionArray[i].x, this.positionArray[i].y);
         }
+    }
+
+    private createTimer() {
+        this.time.addEvent({delay: 1000, callback: () => {}});
+    }
+
+    private createText() {
+        this.add.text(10, 336, this.textTimeout, { font: "36px CurseCasual", color: "#ffffff" });
     }
 
     private createBackground(): void {

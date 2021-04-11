@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Memory game</title>
     <style>
+        @font-face {
+            font-family: "CurseCasual";
+            src: url("assets/fonts/CurseCasual.ttf");
+        }
         body {
             margin: 0;
             padding: 0;
@@ -13,9 +17,15 @@
         canvas {
             width: 100%;
         }
+        .fontPreload {
+            font-family: "CurseCasual";
+            position: absolute;
+            left: -100px;
+        }
     </style>
 </head>
 <body>
+    <div class="fontPreload">.</div>
     <script src="lib/phaser.min.js"></script>
     <script src="dist/bundle.js"></script>
 </body>

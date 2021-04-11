@@ -15,19 +15,20 @@ export class Card extends Phaser.GameObjects.Sprite {
         this.setInteractive(); // it`s a flag which makes sprite interactive
     }
 
-    private flipCard(texture: string = "card") {
+    private flipCard() {
         this.scene.tweens.add({
             targets: this,
             scaleX: 0,
             ease: "Linear",
             duration: 200,
             onComplete: () => {
-                this.showCard(this, texture)
+                this.showCard(this)
             }
         });
     }
 
-    private showCard(context: Card, texture: string) {
+    private showCard(context: Card) {
+        const texture = this.opened ? "card" + this.value : "card";
         // change one texture of the sprite into another one
         context.setTexture(texture); // result - "card0", "card1" ...
         context.scene.tweens.add({
@@ -40,7 +41,7 @@ export class Card extends Phaser.GameObjects.Sprite {
 
     public open() {
         this.opened = true;
-        this.flipCard("card" + this.value);
+        this.flipCard();
     }
 
     public close() {
