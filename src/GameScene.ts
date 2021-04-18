@@ -9,6 +9,7 @@ export class GameScene extends Phaser.Scene {
     private openCard: Card | null = null;
     private cardPairsCount: number = 0;
     private timeText: Phaser.GameObjects.Text | undefined;
+    private timer: Phaser.Time.TimerEvent = new Phaser.Time.TimerEvent({});
     private timeout: number = 0;
 
     constructor() {
@@ -57,24 +58,32 @@ export class GameScene extends Phaser.Scene {
         this.timeout = startTime;
         this.openCard = null;
         this.cardPairsCount = 0;
-        Phaser.Utils.Array.Shuffle(this.positionArray); // make a random array
+        // Phaser.Utils.Array.Shuffle(this.positionArray); // make a random array
         for (let i = 0; i < this.cards.length; i++) {
             this.cards[i].close(); // close each card
             // set new position for each card
             this.cards[i].setPosition(this.positionArray[i].x, this.positionArray[i].y);
         }
+        // animate the disappearance of cards
+        this.positionArray = this.outsideCardsPosition();
+        for (let i = 0; i < this.positionArray.length; i++) {
+            const delayTime: number = i * 100;
+            this.cards[i].moveSmoothly(this.positionArray[i], delayTime);
+        }
+        setTimeout(() => { this.displayCardsSmoothly() }, 1000);
     }
 
     private onTimerTick() {
         this.timeText?.setText(`Time: ${this.timeout--}`);
         if (this.timeout < 0) {
+            this.timer.paused = true; // stop timer
             this.sounds?.timeout.play({volume: 1.5});
             this.restartGame();
         }
     }
 
     private createTimer() {
-        this.time.addEvent({
+        this.timer = this.time.addEvent({
             delay: 1000,
             callback: this.onTimerTick,
             loop: true,
@@ -91,9 +100,8 @@ export class GameScene extends Phaser.Scene {
     }
 
     private createCards(): void {
-        this.positionArray = this.getCardsPosition();
-        Phaser.Utils.Array.Shuffle(this.positionArray); // make a random array
-
+        this.positionArray = this.outsideCardsPosition();
+        
         // create a list of cards` pairs
         let index: number = 0;
         for (let i: number = 0; i < this.positionArray.length; i++) {
@@ -105,10 +113,26 @@ export class GameScene extends Phaser.Scene {
             }
         }
 
+        this.displayCardsSmoothly();
+        
         // assign listener to each card
         this.cards.forEach((card: Card) => {
             card.on("pointerdown", () => this.openCardClick(card), this);
         });
+    }
+
+    private displayCardsSmoothly() {
+        this.positionArray = this.getCardsPosition();
+        Phaser.Utils.Array.Shuffle(this.positionArray); // make a random array
+
+        let delayTime: number = 0;
+        // display cards with animation
+        for (let i = 0; i < this.positionArray.length; i++) {
+            this.cards[i].moveSmoothly(this.positionArray[i], delayTime);
+            this.cards[i].depth = i; // it`s like z-index of texture
+            delayTime = i * 100;
+        }
+        this.timer.paused = false; // start timer
     }
 
     private openCardClick(card: Card): void {
@@ -137,8 +161,9 @@ export class GameScene extends Phaser.Scene {
 
         // check if all cards` pairs are opened
         if (this.cardPairsCount === this.cards.length / 2) {
-            this.sounds?.complete.play({volume: 1.5});
-            this.restartGame();
+            this.timer.paused = true; // stop timer
+            this.sounds?.complete.play({ volume: 1.5 });
+            setTimeout(() => this.restartGame(), 400);
         }
     }
 
@@ -153,6 +178,23 @@ export class GameScene extends Phaser.Scene {
                 cardsPosition.push({
                     x: Offset.OFFSET_X + col * cardWidth + cardWidth / 2,
                     y: Offset.OFFSET_Y + row * cardHeight + cardHeight / 2,
+                });
+            }
+        }
+        return cardsPosition;
+    }
+
+    private outsideCardsPosition(): CardPosition[] {
+        const cardsPosition: CardPosition[] = [];
+        const cardTexture = this.textures.get("card").getSourceImage() as HTMLImageElement;
+        const cardWidth: number = cardTexture.width;
+        const cardHeight: number = cardTexture.height;
+
+        for (let row = 0; row < 2; row++) {
+            for (let col = 0; col < 5; col++) {
+                cardsPosition.push({
+                    x: cardWidth * -1,
+                    y: cardHeight * -1,
                 });
             }
         }

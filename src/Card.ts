@@ -48,4 +48,15 @@ export class Card extends Phaser.GameObjects.Sprite {
         this.opened = false;
         this.flipCard();
     }
+
+    public moveSmoothly(position: CardPosition, delayTime: number) {
+        this.scene.tweens.add({
+            targets: this,
+            x: position.x,
+            y: position.y,
+            ease: "Linear",
+            delay: delayTime,
+            duration: 250,
+        });
+    }
 }
